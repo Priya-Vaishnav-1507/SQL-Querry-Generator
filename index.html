@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3f5f2" />
+    <meta name="description" content="Build and preview SQL queries visually." />
+    <title>Querycraft — SQL Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="Querycraft home">
+          <span class="brand-mark">Q<span>.</span></span>
+          <span class="brand-name">querycraft</span>
+        </a>
+        <div class="workspace-label">WORKSPACE</div>
+        <button class="workspace-switch"><span class="workspace-dot"></span> Local database <span class="chevron">⌄</span></button>
+        <div class="nav-label">BUILDER</div>
+        <button class="nav-item active"><span class="nav-icon">⌘</span> Query builder</button>
+        <button class="nav-item" id="savedNav"><span class="nav-icon">▤</span> Saved queries <span class="nav-count" id="savedCount">0</span></button>
+        <div class="schema-head"><span class="nav-label">SCHEMA</span><button id="refreshSchema" class="icon-button small" aria-label="Refresh schema" title="Reset sample schema">↻</button></div>
+        <div class="schema-list" id="schemaList"></div>
+        <div class="sidebar-bottom"><div class="connection-status"><span class="status-dot"></span><span><strong>Connected</strong><small>Sample database</small></span><span class="more">···</span></div></div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Workspace</span><span class="slash">/</span><strong>Query builder</strong></div>
+          <div class="top-actions"><span class="dialect-label">DIALECT</span><select id="dialect" class="dialect-select" aria-label="SQL dialect"><option value="postgres">PostgreSQL</option><option value="mysql">MySQL</option><option value="sqlite">SQLite</option></select><span class="top-divider"></span><button class="avatar" title="Account">V</button></div>
+        </header>
+        <div class="page-wrap">
+          <section class="page-heading">
+            <div><div class="eyebrow"><span class="eyebrow-mark"></span> VISUAL SQL WORKSPACE</div><h1>Query builder<span class="heading-period">.</span></h1><p class="heading-copy">Shape your query. See the SQL take form.</p></div>
+            <div class="heading-actions"><button class="button secondary" id="resetQuery"><span>↺</span> Reset</button><button class="button primary" id="saveQuery"><span>＋</span> Save query</button></div>
+          </section>
+
+          <div class="builder-layout">
+            <section class="builder-panel" aria-label="Query configuration">
+              <div class="panel-topline"><div><span class="step-number">01</span><span class="panel-title">Configure query</span></div><span class="query-type"><span class="query-type-dot"></span> SELECT</span></div>
+              <div class="builder-body">
+                <div class="form-section">
+                  <label class="field-label" for="tableSelect"><span class="field-index">A</span> SOURCE TABLE</label>
+                  <div class="select-wrap"><span class="input-prefix table-prefix">▦</span><select id="tableSelect" class="field-control table-control"></select><span class="select-chevron">⌄</span></div>
+                </div>
+                <div class="form-section columns-section">
+                  <div class="field-label-row"><label class="field-label"><span class="field-index">B</span> COLUMNS</label><button class="text-button" id="toggleColumns">Select all</button></div>
+                  <div id="columnList" class="column-list"></div>
+                </div>
+                <div class="form-section">
+                  <div class="field-label-row"><span class="field-label"><span class="field-index">C</span> FILTERS <span id="filterCount" class="count-label">0</span></span><button class="text-button add-filter" id="addFilter">＋ Add filter</button></div>
+                  <div id="filterList" class="filter-list"></div>
+                  <div class="empty-hint" id="filterHint">No filters applied <span>·</span> all rows included</div>
+                </div>
+                <div class="form-section">
+                  <div class="field-label-row"><span class="field-label"><span class="field-index">D</span> SORT BY</span><button class="text-button add-filter" id="addSort">＋ Add sort</button></div>
+                  <div id="sortList" class="sort-list"></div>
+                  <div class="empty-hint" id="sortHint">No sorting applied <span>·</span> natural row order</div>
+                </div>
+                <div class="form-section limit-section"><label class="field-label" for="limitInput"><span class="field-index">E</span> ROW LIMIT</label><div class="limit-control"><input id="limitInput" type="number" min="1" max="100000" value="100"><span>rows</span><span class="limit-caption">Keep results focused</span></div></div>
+              </div>
+              <div class="builder-footer"><span><span class="footer-check">✓</span> Query is valid</span><span id="rowEstimate">LIMIT 100</span></div>
+            </section>
+
+            <section class="preview-panel" aria-label="Generated SQL preview">
+              <div class="preview-header"><div><div class="panel-topline preview-title-line"><div><span class="step-number">02</span><span class="panel-title">SQL preview</span></div><span class="live-indicator"><span></span> LIVE</span></div><div class="preview-subtitle">Your query, ready to run.</div></div><div class="preview-actions"><button class="icon-button" id="copyQuery" title="Copy SQL" aria-label="Copy SQL">▢</button><button class="button run-button" id="runQuery"><span>▶</span> Run query</button></div></div>
+              <div class="code-window"><div class="code-toolbar"><span class="file-indicator"><span class="file-dot"></span> query.sql</span><span id="lineCount">1 line</span></div><div class="code-content"><div class="line-numbers" id="lineNumbers">1</div><pre id="sqlPreview" aria-live="polite"></pre></div></div>
+              <div class="preview-footer"><span><span class="keyboard-key">⌘</span><span class="keyboard-key">↵</span> to run query</span><span class="preview-safe"><span>◈</span> Read-only query</span></div>
+              <div class="result-panel" id="resultPanel" hidden><div class="result-heading"><strong>Preview results</strong><button class="icon-button small" id="closeResults" aria-label="Close results">×</button></div><div class="result-content" id="resultContent"></div></div>
+            </section>
+          </div>
+          <footer class="page-footer"><span>Thoughtful queries start here.</span><span>QUERYCRAFT <span class="footer-star">✳</span> BUILT FOR CLARITY</span></footer>
+        </div>
+      </main>
+      <div class="toast" id="toast" role="status"></div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
